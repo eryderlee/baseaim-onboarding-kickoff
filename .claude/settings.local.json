@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_click",
+      "Bash(dir:*)",
+      "Bash(npx create-next-app:*)",
+      "Bash(npm init -y)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(test:*)",
+      "Bash(echo:*)",
+      "Bash(npm.cmd install:*)",
+      "Bash(ls:*)",
+      "Bash(npx.cmd next dev -p 3000)"
+    ]
+  }
+}
