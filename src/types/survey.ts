@@ -158,17 +158,6 @@ export const surveySteps: StepConfig[] = [
   },
   {
     id: 11,
-    question: "If other, which booking systems are you currently using?",
-    type: "text",
-    field: "bookingSystemOther",
-    required: false,
-    conditional: {
-      field: "bookingSystem",
-      value: "Other",
-    },
-  },
-  {
-    id: 12,
     question: "Book Your AI Consultation Call",
     subtitle: "Select a time that works best for you",
     type: "booking",

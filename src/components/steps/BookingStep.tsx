@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-const CAL_URL = "https://cal.com/team/baseaim/ai-consultation?overlayCalendar=true";
+const CAL_URL = "https://cal.com/sora-nakayama-qhch7c/onboarding-call";
 
 export default function BookingStep() {
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { SurveyData, initialSurveyData, surveySteps } from "@/types/survey";
 import TextStep from "./steps/TextStep";
@@ -13,9 +13,48 @@ import BookingStep from "./steps/BookingStep";
 import Button from "./ui/Button";
 import ProgressBar from "./ProgressBar";
 
+function generateSessionId(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+function syncToSheet(sessionId: string, stepNumber: number, data: SurveyData, completed: boolean) {
+  // Fire-and-forget — don't block the UI
+  fetch("/api/sheets", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sessionId,
+      step: stepNumber,
+      completed,
+      data: {
+        fullName: data.fullName,
+        firmName: data.firmName,
+        services: Array.isArray(data.services) ? data.services.join(", ") : data.services,
+        servicesOther: data.servicesOther,
+        phoneNumber: data.phoneNumber,
+        winIn90Days: data.winIn90Days,
+        winIn90DaysOther: data.winIn90DaysOther,
+        currentSituation: data.currentSituation,
+        currentSituationOther: data.currentSituationOther,
+        newClientsPerMonth: data.newClientsPerMonth,
+        hasMetaAds: data.hasMetaAds,
+        softwarePersonOnCall: data.softwarePersonOnCall,
+        bookingSystem: data.bookingSystem,
+        bookingSystemOther: data.bookingSystemOther,
+      },
+    }),
+  }).catch(() => {
+    // Silent fail — survey continues working even if sync fails
+  });
+}
+
 export default function SurveyForm() {
   const [data, setData] = useState<SurveyData>(initialSurveyData);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const sessionIdRef = useRef(generateSessionId());
 
   // Filter out conditional steps that shouldn't be shown
   const visibleSteps = useMemo(() => {
@@ -49,9 +88,24 @@ export default function SurveyForm() {
 
   const goNext = useCallback(() => {
     if (currentStepIndex < visibleSteps.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1);
+      const nextIndex = currentStepIndex + 1;
+      const nextStep = visibleSteps[nextIndex];
+      const isCompleting = nextStep?.type === "booking";
+
+      // Sync current data to Google Sheet
+      setData((currentData) => {
+        syncToSheet(
+          sessionIdRef.current,
+          currentStepIndex + 1,
+          currentData,
+          isCompleting
+        );
+        return currentData;
+      });
+
+      setCurrentStepIndex(nextIndex);
     }
-  }, [currentStepIndex, visibleSteps.length]);
+  }, [currentStepIndex, visibleSteps]);
 
   const goBack = useCallback(() => {
     if (currentStepIndex > 0) {
